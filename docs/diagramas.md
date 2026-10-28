@@ -1,0 +1,19 @@
+# Diagramas — Sistema de Gestión Bibliotecaria (SGB)
+
+## Diagrama de dominio
+
+![Diagrama de dominio](https://www.plantuml.com/plantuml/svg/VLJRRjim37ttLn3PopQqHGhi6c13NTlf0gH9q2J5tWBPPXAsicX8SYyhzbNxXFtO9EUUD7ioAHuU7bAKBumLsbQ5X9mBKiI19IiHXcGi5W9oX2iqblx-KN19gIIsc0bD0juEhoxVmId496PQBA0hZc1EpiEYjCzGO96YDe6v9rKAXmGp5pa_afh1L4Y3Mn592krpYS3Qpdaha4bXJ6YjfhIosCbO3UaNGdCB4dd8fSZkPvehbKSiMSERziVsbtRx0COwHxs4dBS_95-ZBKYeDJyU2zRvFr2u_8DYSPHyQdyEWbejZ4tb1iNm4W2egfZad5K5AilUvoBLw0nBfVSprXgzOL7Yb9KttTZTd8BVAxv8M9on7_rBdP7JR8SgHvDfAZDYjKdgKgeN4iYagYveA-dpH6LP-w-_C7VELiW9thbBaqAZyOHaIbRkqfst9XnehwlWNH5JpEPYKYvZwmD91LbSkpa-iAngWOVjNLVIxhMMap0JZLOBuzq78Ml5-vatQ50_YDSKwKLe9sbrButp1foUGgDvTlQ-iUch1OObPUJ4V3-2NHLimLnaw62Rgza5BgRV0lT2gjBpBGwELaO3dDwXPV-ONaTlQk-1rpHRU6Sjnjg2ia87cw52BRI31ygzP4ZPMYw0fwjjNQva2vBXQ1ntmjueEO6u7oNE08RavoYvwVNNysn168qwjtqN6ew7WwGNT-9-W2e7JtzGPB1PaDryLoEv7IVTaMUwJNhHVsdgdbOB0TzszWIU8EeFuFoisMnkbQcbBPiOX5TX71wdlzbRcgN8y0IYyVMWsub3HnA5lIZfxl9SEDFzIeD_)
+
+> **Diagrama de dominio completo** — Modela todas las entidades del negocio: `Usuario`, `Categoria`, `Libro`, `Prestamo`, `Multa` y `Reserva`, junto con sus relaciones y notas sobre los enums de estado.
+
+Fuente: [`dominio.puml`](dominio.puml)
+
+---
+
+## Diagrama de dominio parcial
+
+![Diagrama de dominio parcial](https://www.plantuml.com/plantuml/svg/TLDBRXin3DtFAGXtqnQDaG3zUb746OzR0wqTn1zqPsWqjCr44WUI9a5Qz42zGhUvM2d7NwHPYHJVUwH8yJn4vMDZ3LHioH7FQ-KrAPD5YWPX_EK2Jg17QkcLLL3X5WSR7Bnq3t-rGPQOWTe__155ow-oR4M2Hbl7Ux1eI_GX2pVaXASiX9Mg-8xS4XRA13o8678Oxsi4zd751m5jL0ZT63sLJSI1PZUcdmYd1v0yGIwKlbbwRboLis4FB_hl-X_x_ISmzXNw3UIi_xRub1z0kjxptNF1DVyhAk4_ITRBY_Vz3rcshXQceL5UclKh0t2DdLUi6uikSlBPbXx5Y5GdNxFtc8o81XViaedIp8gptrkzN4LSiYUrLjHSqV98giAWFTMQsEr9twZqZoLGADqwOMnCugacia-d33JTSrHcZjSoDACyXYH8eMP7fH5l9tZfSJtauo8Mg5TgNczYkmj3bYBkt0flsJJh0W-VjsrKwwm59oVGEcstNxVsYJeGs92cgE1pjc_2CVhndHsGlzhK2VXuyQma1k3o6cFwkeBE74U4acDa2xpOpcupe0uKuycqD-WE9yKRw8toGWnWA7vCYglXQFUO3dJpoM0saj1uEhuiXhr1RvIXgo39FqbokM_NCLzo5BDfyMsIb6R5CF-FZ0emF1FcZ8IwNSYE882SDiqzmlV6ICGHN650VwlQ2Or-kyJjEcr--jGWosjPLfXbe39-wKhx8Dsvc0BD_W4)
+
+> **Diagrama de dominio parcial** — Vista reducida centrada en el núcleo del préstamo: `Usuario`, `Categoria`, `Libro` y `Prestamo`. Corresponde al alcance de los prototipos P1 y P2. No incluye `Multa` ni `Reserva`.
+
+Fuente: [`dominio_parcial.puml`](dominio_parcial.puml)
