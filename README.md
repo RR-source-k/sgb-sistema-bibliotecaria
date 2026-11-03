@@ -86,7 +86,10 @@ sgb-sistema-bibliotecaria/
 │       └── menus.py             # menu_principal y submenús
 ├── datos/                       # archivos .txt de prueba
 ├── docs/
-│   └── diagramas/               # archivos .puml (dominio y clases por capa)
+│   └── diagramas/
+│       ├── diagramas.md         # índice con todos los diagramas renderizados
+│       ├── *.puml               # fuentes PlantUML
+│       └── *.png                # imágenes exportadas
 ├── notebooks/
 │   └── SGB.ipynb                # entregable para Colab (celdas 0 a 5.1)
 └── tests/                       # pruebas con unittest
@@ -116,11 +119,17 @@ El notebook `SGB.ipynb` sigue la numeración de celdas definida en la guía del 
 
 Enums: `TipoUsuarioEnum` (ESTUDIANTE, DOCENTE, EXTERNO), `EstadoPrestamoEnum` (ACTIVO, DEVUELTO, VENCIDO), `EstadoMultaEnum` (PENDIENTE, PAGADA), `EstadoReservaEnum` (ACTIVA, CUMPLIDA, CANCELADA).
 
-### Diagrama de dominio (parcial)
+### Diagramas de dominio
+
+**Dominio parcial:** identifica solo los conceptos (entidades) del negocio, sin atributos ni relaciones: `Usuario`, `Prestamo`, `Libro`, `Reserva`, `Multa` y `Categoria`.
 
 ![Diagrama de dominio parcial](docs/diagramas/dominio_parcial.png)
 
-Versión parcial centrada en el núcleo del préstamo: `Usuario`, `Categoria`, `Libro` y `Prestamo`, que corresponden al alcance de los prototipos P1 y P2. No incluye `Multa` ni `Reserva`, que se agregan en P3. El modelo completo está en [`docs/diagramas/dominio.puml`](docs/diagramas/dominio.puml) y la vista parcial en [`docs/diagramas/dominio_parcial.puml`](docs/diagramas/dominio_parcial.puml). Las imágenes se generan al renderizar los `.puml` y se guardan en la misma carpeta.
+**Dominio:** agrega los atributos de cada entidad y las relaciones con su multiplicidad.
+
+![Diagrama de dominio](docs/diagramas/dominio.png)
+
+Fuentes editables: [`dominio_parcial.puml`](docs/diagramas/dominio_parcial.puml) y [`dominio.puml`](docs/diagramas/dominio.puml). Las imágenes se generan al renderizar los `.puml` y se guardan en la misma carpeta.
 
 ## Reglas de negocio
 
@@ -159,12 +168,12 @@ Los datos se guardan en archivos de texto, un registro por línea, con campos se
 
 ## Diagramas
 
-Los diagramas se elaboran en PlantUML y se guardan en `docs/diagramas/`, organizados según el tipo de diseño. Para renderizarlos se puede usar la extensión de PlantUML en VS Code o el servidor web oficial de PlantUML.
+Los diagramas se elaboran en PlantUML y se guardan en `docs/diagramas/`, organizados según el tipo de diseño. El archivo [`docs/diagramas/diagramas.md`](docs/diagramas/diagramas.md) reúne todos los diagramas renderizados con su estado. Para renderizarlos se puede usar la extensión de PlantUML en VS Code o el servidor web oficial de PlantUML.
 
 | Tipo de diseño | Diagrama | Archivo (sugerido) | Contenido |
 |---|---|---|---|
-| Dominio | Diagrama de dominio | `dominio.puml`, `dominio_parcial.puml` | Entidades del negocio y sus relaciones (completo y vista parcial del núcleo del préstamo) |
-| Estructural | Diagrama de clases | `clases_modelo.puml`, `clases_repositorios.puml`, `clases_servicios.puml` | Clases por capa con atributos, métodos y dependencias |
+| Dominio | Diagrama de dominio | `dominio.puml`, `dominio_parcial.puml` | Entidades del negocio y sus relaciones (parcial: solo conceptos; completo: atributos y multiplicidades) |
+| Estructural | Diagrama de clases | `clases_general.puml`, `clases_modelo.puml`, `clases_repositorios.puml`, `clases_servicios.puml` | Clases por capa con atributos, métodos y dependencias |
 | Estructural | Diagrama de objetos | `objetos.puml` | Instancias concretas basadas en los registros de ejemplo (usuarios, libros, préstamo y multa) |
 | Comportamiento | Diagrama estructurado | `comportamiento_prestamo.puml`, `comportamiento_devolucion.puml` | Flujo de decisiones del préstamo (validaciones) y de la devolución (cálculo de multa) |
 | Interacción | Diagrama de secuencias | `secuencia_prestar.puml`, `secuencia_devolver.puml`, `secuencia_reservar.puml` | Mensajes entre interfaz, servicios, repositorios y archivos |
