@@ -13,12 +13,12 @@ skinparam activity {
 start
 :prestamo <- repo.obtener_por_codigo(codigo_prestamo);
 if (prestamo existe?) then (no)
-  #F5B7B1:RETORNAR (False, "Préstamo no encontrado");
+  :RETORNAR (False, "Préstamo no encontrado");
   stop
 else (si)
 endif
 if (prestamo.estado == "Devuelto"?) then (si)
-  #F5B7B1:RETORNAR (False, "Ya fue devuelto");
+  :RETORNAR (False, "Ya fue devuelto");
   stop
 else (no)
 endif
@@ -28,7 +28,7 @@ endif
 :prestamo.fecha_devolucion <- hoy;
 :prestamo.estado <- "Devuelto";
 if (repo.actualizar(prestamo) exitoso?) then (no)
-  #F5B7B1:RETORNAR (False, "Error al actualizar el préstamo");
+  :RETORNAR (False, "Error al actualizar el préstamo");
   stop
 else (si)
 endif
@@ -63,7 +63,7 @@ if (dias_retraso > 0?) then (si)
 else (no)
 endif
 
-#D5F5E3:RETORNAR (True, mensaje);
+:RETORNAR (True, mensaje);
 stop
 
 @enduml

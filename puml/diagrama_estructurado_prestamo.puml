@@ -15,13 +15,13 @@ start
 
 if (fecha_prestamo informada?) then (si)
   if (formato AAAA-MM-DD valido?) then (no)
-    #F5B7B1:RETORNAR (False, "Fecha de préstamo inválida");
+    :RETORNAR (False, "Fecha de préstamo inválida");
     stop
   else (si)
   endif
   :fecha_inicio <- fecha informada;
   if (fecha_inicio es futura?) then (si)
-    #F5B7B1:RETORNAR (False, "La fecha no puede ser futura");
+    :RETORNAR (False, "La fecha no puede ser futura");
     stop
   else (no)
   endif
@@ -30,12 +30,12 @@ endif
 
 :usuario <- usuario_repo.obtener_por_documento(documento);
 if (usuario existe?) then (no)
-  #F5B7B1:RETORNAR (False, "Usuario no encontrado");
+  :RETORNAR (False, "Usuario no encontrado");
   stop
 else (si)
 endif
 if (usuario.estado == "Activo"?) then (no)
-  #F5B7B1:RETORNAR (False, "Usuario desactivado");
+  :RETORNAR (False, "Usuario desactivado");
   stop
 else (si)
 endif
@@ -43,19 +43,19 @@ endif
 :codigos <- códigos de los préstamos del usuario;
 :pendientes <- multas pendientes cuyo codigo_prestamo está en codigos;
 if (pendientes no esta vacia?) then (si)
-  #F5B7B1:RETORNAR (False, "Tiene multas pendientes");
+  :RETORNAR (False, "Tiene multas pendientes");
   stop
 else (no)
 endif
 
 :libro <- libro_repo.obtener_por_isbn(isbn);
 if (libro existe?) then (no)
-  #F5B7B1:RETORNAR (False, "Libro no encontrado");
+  :RETORNAR (False, "Libro no encontrado");
   stop
 else (si)
 endif
 if (libro.disponibles > 0?) then (no)
-  #F5B7B1:RETORNAR (False, "Sin ejemplares disponibles");
+  :RETORNAR (False, "Sin ejemplares disponibles");
   stop
 else (si)
 endif
@@ -63,7 +63,7 @@ endif
 :limite <- LOAN_LIMITS[usuario.tipo]\n(Estudiante 3 · Docente 5 · Externo 2);
 :activos <- préstamos Activos del usuario;
 if (cantidad(activos) >= limite?) then (si)
-  #F5B7B1:RETORNAR (False, "Alcanzó el límite de préstamos");
+  :RETORNAR (False, "Alcanzó el límite de préstamos");
   stop
 else (no)
 endif
@@ -74,20 +74,20 @@ endif
 :prestamo <- Prestamo(codigo, isbn, documento,\nfecha_inicio, fecha_limite, "", "Activo");
 
 if (repo.guardar(prestamo) exitoso?) then (no)
-  #F5B7B1:RETORNAR (False, "Error al registrar el préstamo");
+  :RETORNAR (False, "Error al registrar el préstamo");
   stop
 else (si)
 endif
 
 :libro.disponibles <- libro.disponibles - 1;
 if (libro_repo.actualizar(libro) exitoso?) then (si)
-  #D5F5E3:RETORNAR (True, "Préstamo creado. Fecha límite: ...");
+  :RETORNAR (True, "Préstamo creado. Fecha límite: ...");
   stop
 else (no)
   :repo.eliminar(codigo)  (rollback);
   :libro.disponibles <- libro.disponibles + 1;
   :libro_repo.actualizar(libro);
-  #F5B7B1:RETORNAR (False, "Error al actualizar disponibilidad");
+  :RETORNAR (False, "Error al actualizar disponibilidad");
   stop
 endif
 
