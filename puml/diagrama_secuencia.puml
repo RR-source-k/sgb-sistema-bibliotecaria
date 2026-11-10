@@ -1,0 +1,63 @@
+@startuml diagrama_secuencia
+title SGB - Secuencia: Crear préstamo
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor Administrador
+participant "TabPrestamos\n(UI)" as UI
+participant "PrestamoService" as PS
+participant "UsuarioRepository" as UR
+participant "MultaRepository" as MR
+participant "LibroRepository" as LR
+participant "PrestamoRepository" as PR
+
+Administrador -> UI : ingresa ISBN y documento\n[Crear Préstamo]
+UI -> UI : validar campos no vacíos
+UI -> PS : crear_prestamo(isbn, numero_documento)
+
+PS -> UR : obtener_por_documento(numero_documento)
+UR --> PS : Usuario | None
+alt usuario no existe o está inactivo
+  PS --> UI : (False, "Usuario no encontrado / desactivado")
+  UI --> Administrador : messagebox de error
+else usuario activo
+  PS -> PR : obtener_por_usuario(numero_documento)
+  PR --> PS : préstamos del usuario
+  PS -> MR : obtener_pendientes()
+  MR --> PS : multas pendientes
+  alt tiene multas pendientes
+    PS --> UI : (False, "Tiene multas pendientes")
+    UI --> Administrador : messagebox de error
+  else sin multas pendientes
+    PS -> LR : obtener_por_isbn(isbn)
+    LR --> PS : Libro | None
+    alt libro no existe o disponibles <= 0
+      PS --> UI : (False, "Libro no encontrado / sin ejemplares")
+      UI --> Administrador : messagebox de error
+    else hay ejemplares disponibles
+      PS -> PR : obtener_activos()
+      PR --> PS : préstamos activos
+      alt activos del usuario >= límite (Est. 3 / Doc. 5 / Ext. 2)
+        PS --> UI : (False, "Límite de préstamos alcanzado")
+        UI --> Administrador : messagebox de error
+      else dentro del límite
+        PS -> PS : fecha_limite = hoy + plazo\n(Est. 7 / Doc. 15 / Ext. 5 días)
+        PS -> PR : guardar(Prestamo)
+        PR --> PS : True
+        PS -> LR : actualizar(libro con disponibles - 1)
+        alt falla la actualización de stock
+          LR --> PS : False
+          PS -> PR : eliminar(codigo) [rollback]
+          PS --> UI : (False, "Error al actualizar disponibilidad")
+        else stock actualizado
+          LR --> PS : True
+          PS --> UI : (True, "Préstamo creado. Fecha límite: ...")
+          UI -> UI : refresh_table()
+          UI --> Administrador : messagebox de éxito
+        end
+      end
+    end
+  end
+end
+@enduml

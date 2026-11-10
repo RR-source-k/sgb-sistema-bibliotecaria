@@ -1,0 +1,137 @@
+@startuml diagrama_clases
+title SGB - Diagrama de Clases (capa de modelo)
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #2E86C1
+}
+hide empty members
+
+' ---------------- Enumeraciones ----------------
+enum TipoUsuarioEnum {
+  ESTUDIANTE = "Estudiante"
+  DOCENTE = "Docente"
+  EXTERNO = "Externo"
+  +limite_prestamos : int
+  +dias_prestamo : int
+}
+
+enum EstadoPrestamoEnum {
+  ACTIVO = "Activo"
+  DEVUELTO = "Devuelto"
+  VENCIDO = "Vencido"
+}
+
+enum EstadoMultaEnum {
+  PENDIENTE = "Pendiente"
+  PAGADA = "Pagada"
+}
+
+enum EstadoReservaEnum {
+  ACTIVA = "Activa"
+  CANCELADA = "Cancelada"
+  ENTREGADA = "Entregada"
+}
+
+enum CategoriaEnum {
+  LITERATURA = "LIT"
+  TECNOLOGIA = "TEC"
+  CIENCIAS = "CIA"
+  MATEMATICA = "MAT"
+  HISTORIA = "HIS"
+  DERECHO = "DER"
+  MEDICINA = "MED"
+  OTROS = "OTH"
+}
+
+' ---------------- Clases de dominio ----------------
+class Usuario {
+  +numero_documento : str
+  +nombre : str
+  +tipo : str
+  +correo : str
+  +telefono : str
+  +estado : str
+  +to_line() : str
+  +from_line(line : str) : Usuario {static}
+  +to_dict() : dict
+}
+
+class Categoria {
+  +codigo : str
+  +nombre : str
+  +descripcion : str
+  +to_line() : str
+  +from_line(line : str) : Categoria {static}
+}
+
+class Libro {
+  +isbn : str
+  +titulo : str
+  +autor : str
+  +codigo_categoria : str
+  +anio : int
+  +total_ejemplares : int
+  +disponibles : int
+  +to_line() : str
+  +from_line(line : str) : Libro {static}
+}
+
+class Prestamo {
+  +codigo : str
+  +isbn : str
+  +numero_documento : str
+  +fecha_prestamo : str
+  +fecha_limite : str
+  +fecha_devolucion : str
+  +estado : str
+  +to_line() : str
+  +from_line(line : str) : Prestamo {static}
+}
+
+class Multa {
+  +codigo : str
+  +codigo_prestamo : str
+  +dias_retraso : int
+  +valor : int
+  +estado : str
+  +to_line() : str
+  +from_line(line : str) : Multa {static}
+}
+
+class Reserva {
+  +codigo : str
+  +isbn : str
+  +numero_documento : str
+  +fecha_reserva : str
+  +estado : str
+  +to_line() : str
+  +from_line(line : str) : Reserva {static}
+}
+
+' ---------------- Relaciones ----------------
+Categoria "1" o-- "0..*" Libro : agrupa >
+Usuario "1" --> "0..*" Prestamo : solicita >
+Libro "1" --> "0..*" Prestamo : es objeto de >
+Prestamo "1" --> "0..1" Multa : genera >
+Usuario "1" --> "0..*" Reserva : realiza >
+Libro "1" --> "0..*" Reserva : es objeto de >
+
+' Dependencias con enumeraciones (los atributos se guardan como texto)
+Usuario ..> TipoUsuarioEnum : tipo
+Prestamo ..> EstadoPrestamoEnum : estado
+Multa ..> EstadoMultaEnum : estado
+Reserva ..> EstadoReservaEnum : estado
+Categoria ..> CategoriaEnum : codigo
+
+note bottom of Multa
+  valor = dias_retraso x 1.000 COP
+end note
+
+note bottom of TipoUsuarioEnum
+  Estudiante: 3 libros / 7 dias
+  Docente:    5 libros / 15 dias
+  Externo:    2 libros / 5 dias
+end note
+@enduml

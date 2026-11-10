@@ -1,0 +1,8 @@
+LIT|Literatura|Novela, poesía, cuento y ensayo literario
+TEC|Tecnología|Tecnología, computación e ingeniería
+CIA|Ciencias|Ciencias naturales y aplicadas
+MAT|Matemática|Matemáticas puras y aplicadas
+HIS|Historia|Historia y ciencias sociales
+DER|Derecho|Derecho y ciencias jurídicas
+MED|Medicina|Medicina y ciencias de la salud
+OTH|Otros|Otras áreas del conocimiento

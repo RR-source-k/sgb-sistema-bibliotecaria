@@ -1,0 +1,8 @@
+9789585001234|Cien años de soledad|Gabriel García Márquez|LIT|1967|5|5
+9789587654321|Estructuras de datos en Python|Ana Gómez|TEC|2020|2|0
+9780132350884|Clean Code|Robert C. Martin|TEC|2008|3|2
+9780553380163|Breve historia del tiempo|Stephen Hawking|CIA|1988|4|4
+9789587000111|Álgebra Lineal|Stanley Grossman|MAT|2012|3|3
+9789587410440|Historia de Colombia|Jorge Orlando Melo|HIS|2017|2|2
+9789587300215|Manual de Derecho Constitucional|Luis Carlos Sáchica|DER|2015|2|2
+9789587222333|Anatomía Humana|Frank Netter|MED|2019|2|2
