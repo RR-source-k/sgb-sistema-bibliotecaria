@@ -1,4 +1,4 @@
-# 📚 SGB — Sistema de Gestión Bibliotecaria
+# SGB — Sistema de Gestión Bibliotecaria
 
 Aplicación de escritorio en Python (interfaz **customtkinter**) para gestionar una biblioteca:
 usuarios, libros, préstamos, reservas, multas y análisis estadístico del uso de la colección.
