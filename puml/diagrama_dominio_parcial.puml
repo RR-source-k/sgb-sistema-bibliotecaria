@@ -1,0 +1,23 @@
+@startuml
+title SGB - Diagrama de Dominio Parcial\n(conceptos identificados, sin atributos ni asociaciones)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam class {
+  BackgroundColor #FDFEFE
+  BorderColor #2E86C1
+  ArrowColor #2E86C1
+}
+
+' Sustantivos clave extraidos del planteamiento del caso
+' (registro de usuarios, catalogo de libros y categorias,
+'  prestamos, multas por retraso y reservas)
+class Usuario
+class Categoria
+class Libro
+class Prestamo
+class Multa
+class Reserva
+
+@enduml

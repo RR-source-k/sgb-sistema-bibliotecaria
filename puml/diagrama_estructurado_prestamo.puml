@@ -1,0 +1,94 @@
+@startuml
+title SGB - Diagrama estructurado: PrestamoService.crear_prestamo(isbn, documento, fecha_prestamo)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam activity {
+  BackgroundColor #FDFEFE
+  BorderColor #2E86C1
+  DiamondBackgroundColor #FEF9E7
+  DiamondBorderColor #B7950B
+}
+
+start
+:fecha_inicio <- hoy;
+
+if (fecha_prestamo informada?) then (si)
+  if (formato AAAA-MM-DD valido?) then (no)
+    #F5B7B1:RETORNAR (False, "Fecha de préstamo inválida");
+    stop
+  else (si)
+  endif
+  :fecha_inicio <- fecha informada;
+  if (fecha_inicio es futura?) then (si)
+    #F5B7B1:RETORNAR (False, "La fecha no puede ser futura");
+    stop
+  else (no)
+  endif
+else (no)
+endif
+
+:usuario <- usuario_repo.obtener_por_documento(documento);
+if (usuario existe?) then (no)
+  #F5B7B1:RETORNAR (False, "Usuario no encontrado");
+  stop
+else (si)
+endif
+if (usuario.estado == "Activo"?) then (no)
+  #F5B7B1:RETORNAR (False, "Usuario desactivado");
+  stop
+else (si)
+endif
+
+:codigos <- códigos de los préstamos del usuario;
+:pendientes <- multas pendientes cuyo codigo_prestamo está en codigos;
+if (pendientes no esta vacia?) then (si)
+  #F5B7B1:RETORNAR (False, "Tiene multas pendientes");
+  stop
+else (no)
+endif
+
+:libro <- libro_repo.obtener_por_isbn(isbn);
+if (libro existe?) then (no)
+  #F5B7B1:RETORNAR (False, "Libro no encontrado");
+  stop
+else (si)
+endif
+if (libro.disponibles > 0?) then (no)
+  #F5B7B1:RETORNAR (False, "Sin ejemplares disponibles");
+  stop
+else (si)
+endif
+
+:limite <- LOAN_LIMITS[usuario.tipo]\n(Estudiante 3 · Docente 5 · Externo 2);
+:activos <- préstamos Activos del usuario;
+if (cantidad(activos) >= limite?) then (si)
+  #F5B7B1:RETORNAR (False, "Alcanzó el límite de préstamos");
+  stop
+else (no)
+endif
+
+:periodo <- LOAN_PERIODS[usuario.tipo]\n(Estudiante 7 · Docente 15 · Externo 5);
+:fecha_limite <- fecha_inicio + periodo días;
+:codigo <- generar_codigo("PRE");
+:prestamo <- Prestamo(codigo, isbn, documento,\nfecha_inicio, fecha_limite, "", "Activo");
+
+if (repo.guardar(prestamo) exitoso?) then (no)
+  #F5B7B1:RETORNAR (False, "Error al registrar el préstamo");
+  stop
+else (si)
+endif
+
+:libro.disponibles <- libro.disponibles - 1;
+if (libro_repo.actualizar(libro) exitoso?) then (si)
+  #D5F5E3:RETORNAR (True, "Préstamo creado. Fecha límite: ...");
+  stop
+else (no)
+  :repo.eliminar(codigo)  (rollback);
+  :libro.disponibles <- libro.disponibles + 1;
+  :libro_repo.actualizar(libro);
+  #F5B7B1:RETORNAR (False, "Error al actualizar disponibilidad");
+  stop
+endif
+
+@enduml

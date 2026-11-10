@@ -1,0 +1,91 @@
+@startuml
+title SGB - Diagrama de Dominio\n(conceptos del negocio, atributos y multiplicidades)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam class {
+  BackgroundColor #FDFEFE
+  BorderColor #2E86C1
+  ArrowColor #2E86C1
+}
+skinparam note {
+  BackgroundColor #FEF9E7
+  BorderColor #B7950B
+}
+
+' Definicion de clases con atributos conceptuales
+class Usuario {
+  +String numeroDocumento
+  +String nombre
+  +String tipo
+  +String correo
+  +String telefono
+  +String estado
+}
+
+class Categoria {
+  +String codigo
+  +String nombre
+  +String descripcion
+}
+
+class Libro {
+  +String isbn
+  +String titulo
+  +String autor
+  +int anio
+  +int totalEjemplares
+  +int disponibles
+}
+
+class Prestamo {
+  +String codigo
+  +Date fechaPrestamo
+  +Date fechaLimite
+  +Date fechaDevolucion
+  +String estado
+}
+
+class Multa {
+  +String codigo
+  +int diasRetraso
+  +int valor
+  +String estado
+}
+
+class Reserva {
+  +String codigo
+  +Date fechaReserva
+  +String estado
+}
+
+' Relaciones y multiplicidades
+Usuario "1" -- "0..*" Prestamo : solicita >
+Usuario "1" -- "0..*" Reserva : hace >
+Categoria "1" -- "0..*" Libro : agrupa >
+Libro "1" -- "0..*" Prestamo : es objeto de >
+Libro "1" -- "0..*" Reserva : es objeto de >
+Prestamo "1" -- "0..1" Multa : genera >
+
+note right of Usuario
+  tipo: Estudiante | Docente | Externo
+  estado: Activo | Inactivo
+end note
+
+note bottom of Prestamo
+  estado: Activo | Devuelto | Vencido
+  fechaDevolucion vacia = no devuelto
+end note
+
+note bottom of Multa
+  valor = diasRetraso x $1.000 COP
+  estado: Pendiente | Pagada
+end note
+
+note bottom of Reserva
+  estado: Activa | Cancelada | Entregada
+  solo de libros sin disponibles
+end note
+
+@enduml

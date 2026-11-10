@@ -1,0 +1,95 @@
+@startuml
+title SGB - Diagrama de Secuencia: crear, cancelar y atender una reserva
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequence {
+  ParticipantBackgroundColor #FDFEFE
+  ParticipantBorderColor #2E86C1
+  LifeLineBorderColor #7F8C8D
+  ArrowColor #2E86C1
+}
+skinparam maxMessageSize 220
+
+actor "Bibliotecario" as U
+participant "TabReservas\n(UI)" as UI
+participant "ReservaService" as S
+participant "UsuarioRepository" as UR
+participant "LibroRepository" as LR
+participant "ReservaRepository" as RR
+database "archivos .txt" as F
+
+== Crear reserva ==
+U -> UI : escribe ISBN y documento\ny pulsa «Crear Reserva»
+activate UI
+UI -> S : crear_reserva(isbn, documento)
+activate S
+S -> UR : obtener_por_documento(documento)
+UR -> F : leer usuarios.txt
+UR --> S : Usuario | None
+
+alt usuario no existe o está Inactivo
+  S --> UI : (False, "Usuario no encontrado / desactivado")
+else usuario habilitado
+  S -> LR : obtener_por_isbn(isbn)
+  LR -> F : leer libros.txt
+  LR --> S : Libro | None
+  alt libro no existe
+    S --> UI : (False, "Libro no encontrado")
+  else libro.disponibles > 0
+    S --> UI : (False, "Hay ejemplares: solicítelo como préstamo")
+  else sin ejemplares disponibles
+    S -> RR : obtener_por_usuario(documento)
+    RR --> S : list[Reserva]
+    alt ya tiene una reserva "Activa" del mismo ISBN
+      S --> UI : (False, "Ya tienes una reserva activa")
+    else primera reserva activa
+      S -> RR : _generar_codigo("RES")
+      RR --> S : "RES000n"
+      S -> RR : guardar(Reserva estado="Activa", fecha=hoy)
+      RR -> F : agregar línea en reservas.txt
+      S --> UI : (True, "Reserva creada exitosamente")
+    end
+  end
+end
+deactivate S
+UI -> U : messagebox y recarga la tabla
+deactivate UI
+
+== Cancelar reserva ==
+U -> UI : escribe el código y pulsa «Cancelar»
+activate UI
+UI -> S : cancelar_reserva(codigo)
+activate S
+S -> RR : obtener_por_codigo(codigo)
+RR --> S : Reserva | None
+alt no existe o estado != "Activa"
+  S --> UI : (False, "Reserva no encontrada / ya no está activa")
+else activa
+  S -> S : reserva.estado = "Cancelada"
+  S -> RR : actualizar(reserva)
+  RR -> F : reescribir reservas.txt
+  S --> UI : (True, "Reserva cancelada exitosamente")
+end
+deactivate S
+deactivate UI
+
+== Atender (activar) reserva ==
+U -> UI : escribe el código y pulsa «Activar»
+activate UI
+UI -> S : activar_reserva(codigo)
+activate S
+S -> RR : obtener_por_codigo(codigo)
+RR --> S : Reserva | None
+alt no existe o estado != "Activa"
+  S --> UI : (False, "Solo se activan reservas en estado Activa")
+else activa
+  S -> S : reserva.estado = "Entregada"
+  S -> RR : actualizar(reserva)
+  RR -> F : reescribir reservas.txt
+  S --> UI : (True, "Reserva atendida")
+end
+deactivate S
+deactivate UI
+
+@enduml

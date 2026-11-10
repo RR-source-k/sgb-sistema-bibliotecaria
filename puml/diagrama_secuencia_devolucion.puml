@@ -1,0 +1,87 @@
+@startuml
+title SGB - Diagrama de Secuencia: devolver un libro (con cálculo de multa) y cobrar la multa
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequence {
+  ParticipantBackgroundColor #FDFEFE
+  ParticipantBorderColor #2E86C1
+  LifeLineBorderColor #7F8C8D
+  ArrowColor #2E86C1
+}
+skinparam maxMessageSize 220
+
+actor "Bibliotecario" as U
+participant "TabPrestamos\n(UI)" as UI
+participant "PrestamoService" as S
+participant "PrestamoRepository" as PR
+participant "LibroRepository" as LR
+participant "MultaRepository" as MR
+participant "TabMultas\n(UI)" as UM
+participant "MultaService" as MS
+database "archivos .txt" as F
+
+== Devolución ==
+U -> UI : escribe el código del préstamo\ny pulsa «Devolver Libro»
+activate UI
+UI -> S : devolver(codigo_prestamo)
+activate S
+S -> PR : obtener_por_codigo(codigo)
+PR -> F : leer prestamos.txt
+PR --> S : Prestamo | None
+
+alt no existe o ya está "Devuelto"
+  S --> UI : (False, "Préstamo no encontrado / ya devuelto")
+else préstamo activo
+  S -> S : fecha_devolucion = hoy\nestado = "Devuelto"
+  S -> PR : actualizar(prestamo)
+  PR -> F : reescribir prestamos.txt
+  PR --> S : True
+
+  S -> LR : obtener_por_isbn(prestamo.isbn)
+  LR --> S : Libro
+  S -> S : libro.disponibles += 1
+  S -> LR : actualizar(libro)
+  LR -> F : reescribir libros.txt
+
+  S -> S : dias_retraso = max(hoy - fecha_limite, 0)\nvalor = dias_retraso x $1.000
+
+  opt dias_retraso > 0
+    S -> MR : obtener_por_prestamo(codigo)
+    MR -> F : leer multas.txt
+    MR --> S : list[Multa]
+    alt ya existe una multa (generada por vencimiento)
+      S -> MR : actualizar(multa)\ndias_retraso y valor nuevos
+    else no existe
+      S -> MR : _generar_codigo("MUL")
+      MR --> S : "MUL000n"
+      S -> MR : guardar(Multa estado="Pendiente")
+    end
+    MR -> F : escribir multas.txt
+  end
+  S --> UI : (True, "Devolución registrada. Retraso: n días. Multa: $valor COP")
+end
+deactivate S
+UI -> U : messagebox y recarga la tabla
+deactivate UI
+
+== Cobro de la multa ==
+U -> UM : selecciona la fila de la multa\ny pulsa «Cobrar»
+activate UM
+UM -> MS : pagar_multa(codigo_multa)
+activate MS
+MS -> MR : obtener_por_codigo(codigo)
+MR --> MS : Multa | None
+alt no existe o ya está "Pagada"
+  MS --> UM : (False, mensaje)
+else pendiente
+  MS -> MS : multa.estado = "Pagada"
+  MS -> MR : actualizar(multa)
+  MR -> F : reescribir multas.txt
+  MS --> UM : (True, "Multa pagada exitosamente.")
+end
+deactivate MS
+UM -> U : messagebox y recarga la tabla
+deactivate UM
+
+@enduml

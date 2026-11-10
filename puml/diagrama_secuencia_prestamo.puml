@@ -1,0 +1,102 @@
+@startuml
+title SGB - Diagrama de Secuencia: crear un préstamo
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequence {
+  ParticipantBackgroundColor #FDFEFE
+  ParticipantBorderColor #2E86C1
+  LifeLineBorderColor #7F8C8D
+  ArrowColor #2E86C1
+}
+skinparam maxMessageSize 220
+
+actor "Bibliotecario" as U
+participant "TabPrestamos\n(UI)" as UI
+participant "PrestamoService" as S
+participant "UsuarioRepository" as UR
+participant "MultaRepository" as MR
+participant "LibroRepository" as LR
+participant "PrestamoRepository" as PR
+database "archivos .txt" as F
+
+U -> UI : escribe ISBN, documento y fecha (opcional)\ny pulsa «Crear Préstamo»
+activate UI
+UI -> UI : _crear_prestamo()\nvalida que ISBN y documento no estén vacíos
+UI -> S : crear_prestamo(isbn, documento, fecha)
+activate S
+
+S -> S : valida formato y que la fecha no sea futura
+
+S -> UR : obtener_por_documento(documento)
+activate UR
+UR -> F : leer usuarios.txt
+UR --> S : Usuario | None
+deactivate UR
+
+alt usuario no existe o está Inactivo
+  S --> UI : (False, "Usuario no encontrado / desactivado")
+else usuario habilitado
+  S -> PR : obtener_por_usuario(documento)
+  activate PR
+  PR -> F : leer prestamos.txt
+  PR --> S : list[Prestamo]
+  deactivate PR
+
+  S -> MR : obtener_pendientes()
+  activate MR
+  MR -> F : leer multas.txt
+  MR --> S : list[Multa]
+  deactivate MR
+
+  alt tiene multas pendientes
+    S --> UI : (False, "Debe pagar las multas pendientes")
+  else sin multas pendientes
+    S -> LR : obtener_por_isbn(isbn)
+    activate LR
+    LR -> F : leer libros.txt
+    LR --> S : Libro | None
+    deactivate LR
+
+    alt libro no existe o disponibles <= 0
+      S --> UI : (False, "Libro no encontrado / sin ejemplares")
+    else hay ejemplares
+      S -> PR : obtener_activos()
+      PR --> S : list[Prestamo]
+
+      alt activos del usuario >= cupo\n(Estudiante 3, Docente 5, Externo 2)
+        S --> UI : (False, "Límite de préstamos alcanzado")
+      else dentro del cupo
+        S -> S : fecha_limite = fecha + plazo\n(Estudiante 7, Docente 15, Externo 5 días)
+        S -> PR : _generar_codigo("PRE")
+        PR --> S : "PRE000n"
+        S -> PR : guardar(Prestamo)
+        PR -> F : agregar línea en prestamos.txt
+        PR --> S : True
+
+        S -> S : libro.disponibles -= 1
+        S -> LR : actualizar(libro)
+        LR -> F : reescribir libros.txt
+        LR --> S : True / False
+
+        alt falla al actualizar el libro
+          S -> PR : eliminar(codigo)  «rollback»
+          S -> LR : actualizar(libro)  «restaura disponibles»
+          S --> UI : (False, "Error al actualizar disponibilidad")
+        else éxito
+          S --> UI : (True, "Préstamo creado. Fecha límite: AAAA-MM-DD")
+        end
+      end
+    end
+  end
+end
+deactivate S
+
+alt success
+  UI -> U : messagebox "Éxito"\nlimpia campos y recarga la tabla
+else error
+  UI -> U : messagebox "Error" con el mensaje
+end
+deactivate UI
+
+@enduml

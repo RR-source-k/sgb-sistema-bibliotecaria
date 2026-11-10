@@ -1,0 +1,281 @@
+@startuml
+title SGB - Diagrama de Clases por capas\nUI -> Servicios -> Repositorios -> Archivos .txt (todas usan el Modelo)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam packageStyle rectangle
+skinparam class {
+  BackgroundColor #FDFEFE
+  BorderColor #2E86C1
+  ArrowColor #566573
+}
+skinparam package {
+  BorderColor #7F8C8D
+  FontStyle bold
+}
+
+' ======================================================== MODELO
+package "model (dominio)" as pkgModel #EAF2F8 {
+  class Usuario
+  class Categoria
+  class Libro
+  class Prestamo
+  class Multa
+  class Reserva
+  enum TipoUsuarioEnum
+  enum EstadoPrestamoEnum
+  enum EstadoMultaEnum
+  enum EstadoReservaEnum
+}
+
+' ======================================================== REPOSITORIOS
+package "repositories (persistencia)" as pkgRepo #FEF5E7 {
+  class ArchivoUtil {
+    +DATA_DIR : str {static}
+    +filename : str
+    +filepath : str
+    +leer_lineas() : list[str]
+    +escribir_linea(linea : str) : bool
+    +reescribir(lineas : list[str]) : bool
+    {static} +generar_codigo(prefijo : str, lineas : list) : str
+  }
+
+  class UsuarioRepository {
+    +obtener_todos() : list[Usuario]
+    +obtener_por_documento(documento : str) : Usuario
+    +guardar(usuario : Usuario) : bool
+    +actualizar(usuario : Usuario) : bool
+    +eliminar(documento : str) : bool
+  }
+
+  class CategoriaRepository {
+    +obtener_todos() : list[Categoria]
+    +obtener_por_codigo(codigo : str) : Categoria
+    +guardar(categoria : Categoria) : bool
+    +actualizar(categoria : Categoria) : bool
+    +eliminar(codigo : str) : bool
+  }
+
+  class LibroRepository {
+    +obtener_todos() : list[Libro]
+    +obtener_por_isbn(isbn : str) : Libro
+    +buscar_por_titulo(termino : str) : list[Libro]
+    +buscar_por_categoria(codigo : str) : list[Libro]
+    +guardar(libro : Libro) : bool
+    +actualizar(libro : Libro) : bool
+    +eliminar(isbn : str) : bool
+  }
+
+  class PrestamoRepository {
+    +obtener_todos() : list[Prestamo]
+    +obtener_por_codigo(codigo : str) : Prestamo
+    +obtener_activos() : list[Prestamo]
+    +obtener_por_usuario(documento : str) : list[Prestamo]
+    +obtener_por_isbn(isbn : str) : list[Prestamo]
+    +guardar(prestamo : Prestamo) : bool
+    +actualizar(prestamo : Prestamo) : bool
+    +eliminar(codigo : str) : bool
+    #_generar_codigo(prefijo : str) : str
+  }
+
+  class MultaRepository {
+    +obtener_todos() : list[Multa]
+    +obtener_por_codigo(codigo : str) : Multa
+    +obtener_por_prestamo(codigo_prestamo : str) : list[Multa]
+    +obtener_pendientes() : list[Multa]
+    +obtener_total_pendiente() : int
+    +guardar(multa : Multa) : bool
+    +actualizar(multa : Multa) : bool
+    +eliminar(codigo : str) : bool
+    #_generar_codigo(prefijo : str) : str
+  }
+
+  class ReservaRepository {
+    +obtener_todos() : list[Reserva]
+    +obtener_por_codigo(codigo : str) : Reserva
+    +obtener_activas() : list[Reserva]
+    +obtener_por_isbn(isbn : str) : list[Reserva]
+    +obtener_por_usuario(documento : str) : list[Reserva]
+    +guardar(reserva : Reserva) : bool
+    +actualizar(reserva : Reserva) : bool
+    +eliminar(codigo : str) : bool
+    #_generar_codigo(prefijo : str) : str
+  }
+}
+
+' ======================================================== SERVICIOS
+package "services (logica de negocio)" as pkgSrv #E8F8F5 {
+  class UsuarioService {
+    +obtener_todos() : list[Usuario]
+    +obtener_por_documento(doc : str) : Usuario
+    +registrar(usuario : Usuario) : (bool, str)
+    +actualizar(usuario : Usuario) : (bool, str)
+    +eliminar(doc : str) : (bool, str)
+    +activar(doc : str) : (bool, str)
+  }
+
+  class LibroService {
+    +obtener_todos() : list[Libro]
+    +obtener_por_isbn(isbn : str) : Libro
+    +buscar(termino : str) : list[Libro]
+    +buscar_por_categoria(cod : str) : list[Libro]
+    +obtener_categorias_disponibles() : list[tuple]
+    +registrar_categoria(codigo, nombre, descripcion) : (bool, str)
+    +registrar(libro : Libro) : (bool, str)
+    +actualizar(libro : Libro) : (bool, str)
+    +eliminar(isbn : str) : (bool, str)
+    +incrementar_ejemplares(isbn, cantidad) : (bool, str)
+  }
+
+  class PrestamoService {
+    +LOAN_PERIODS : dict {static}
+    +LOAN_LIMITS : dict {static}
+    +VALOR_MULTA_DIA : int = 1000 {static}
+    +crear_prestamo(isbn, documento, fecha_prestamo) : (bool, str)
+    +devolver(codigo_prestamo : str) : (bool, str)
+    +obtener_todos() : list[Prestamo]
+    +obtener_activos() : list[Prestamo]
+    +obtener_por_usuario(doc : str) : list[Prestamo]
+    +obtener_vencidos() : list[Prestamo]
+    +eliminar(codigo : str) : (bool, str)
+  }
+
+  class MultaService {
+    +obtener_todos() : list[Multa]
+    +obtener_pendientes() : list[Multa]
+    +obtener_por_prestamo(cod : str) : list[Multa]
+    +obtener_por_usuario(doc : str) : list[Multa]
+    +obtener_total_pendiente_usuario(doc : str) : int
+    +obtener_total_pendiente_sistema() : int
+    +pagar_multa(codigo : str) : (bool, str)
+    +calcular_multas_vencidas() : list[Multa]
+    +generar_multas_vencidas() : (bool, str)
+    +obtener_morosos() : list[dict]
+  }
+
+  class ReservaService {
+    +obtener_todos() : list[Reserva]
+    +obtener_activas() : list[Reserva]
+    +obtener_por_usuario(doc : str) : list[Reserva]
+    +obtener_por_isbn(isbn : str) : list[Reserva]
+    +crear_reserva(isbn, documento) : (bool, str)
+    +cancelar_reserva(codigo : str) : (bool, str)
+    +activar_reserva(codigo : str) : (bool, str)
+  }
+
+  class AnalisisDatosService {
+    +libros_mas_prestados(top_n : int) : list[tuple]
+    +prestamos_por_categoria() : list[tuple]
+    +tasa_infraccion() : list[tuple]
+    +duracion_promedio_prestamo() : float
+    +reporte_multas() : dict
+    +resumen_completo() : dict
+  }
+}
+
+' ======================================================== UI
+package "ui (customtkinter)" as pkgUi #F5EEF8 {
+  class SGBMainWindow {
+    +tabview : CTkTabview
+    -_reload_all_tabs()
+    -_cargar_ejemplos()
+    -_vaciar_datos()
+  }
+  class TabUsuarios {
+    +refresh_table()
+    -_registrar()
+    -_actualizar()
+    -_desactivar()
+  }
+  class TabLibros {
+    +refresh_table()
+    -_registrar()
+    -_actualizar()
+    -_eliminar()
+    -_agregar_ejemplares()
+    -_buscar()
+    -_nueva_categoria()
+  }
+  class TabPrestamos {
+    +refresh_table()
+    -_crear_prestamo()
+    -_devolver_libro()
+  }
+  class TabReservas {
+    +refresh_table()
+    -_crear_reserva()
+    -_cancelar_reserva()
+    -_activar_reserva()
+  }
+  class TabMultas {
+    +refresh_table()
+    -_pagar()
+    -_generar_vencidas()
+    -_mostrar_morosos()
+  }
+  class TabAnalisis {
+    +refresh_table()
+  }
+  class DialogoCategoria
+  class DemoEjemplo {
+    +iniciar()
+  }
+}
+
+' ======================================================== RELACIONES
+' UI
+SGBMainWindow *-- TabUsuarios
+SGBMainWindow *-- TabLibros
+SGBMainWindow *-- TabPrestamos
+SGBMainWindow *-- TabReservas
+SGBMainWindow *-- TabMultas
+SGBMainWindow *-- TabAnalisis
+SGBMainWindow ..> DemoEjemplo : crea
+TabLibros ..> DialogoCategoria : abre
+DemoEjemplo ..> SGBMainWindow : maneja
+
+TabUsuarios --> UsuarioService
+TabLibros --> LibroService
+TabPrestamos --> PrestamoService
+TabReservas --> ReservaService
+TabMultas --> MultaService
+TabAnalisis --> AnalisisDatosService
+
+' Servicios -> Repositorios
+UsuarioService --> UsuarioRepository
+LibroService --> LibroRepository
+LibroService --> CategoriaRepository
+PrestamoService --> PrestamoRepository
+PrestamoService --> LibroRepository
+PrestamoService --> UsuarioRepository
+PrestamoService --> MultaRepository
+MultaService --> MultaRepository
+MultaService --> PrestamoRepository
+MultaService --> UsuarioRepository
+ReservaService --> ReservaRepository
+ReservaService --> LibroRepository
+ReservaService --> UsuarioRepository
+ReservaService --> PrestamoRepository
+AnalisisDatosService --> PrestamoRepository
+AnalisisDatosService --> MultaRepository
+AnalisisDatosService --> LibroRepository
+AnalisisDatosService --> UsuarioRepository
+AnalisisDatosService --> CategoriaRepository
+
+' Repositorios -> ArchivoUtil (cada repo crea su propio ArchivoUtil)
+UsuarioRepository *-- ArchivoUtil
+CategoriaRepository *-- ArchivoUtil
+LibroRepository *-- ArchivoUtil
+PrestamoRepository *-- ArchivoUtil
+MultaRepository *-- ArchivoUtil
+ReservaRepository *-- ArchivoUtil
+
+note bottom of pkgModel
+  Todas las capas usan el modelo:
+  cada repositorio gestiona una entidad
+  y los servicios usan TipoUsuarioEnum.
+  Detalle en diagrama_clases.puml
+end note
+
+@enduml

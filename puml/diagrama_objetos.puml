@@ -1,0 +1,155 @@
+@startuml
+title SGB - Diagrama de Objetos\n(instantanea tras "Cargar casos de ejemplo"; hoy = 2026-11-10)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam object {
+  BackgroundColor #FDFEFE
+  BorderColor #2E86C1
+  ArrowColor #566573
+}
+skinparam note {
+  BackgroundColor #FEF9E7
+  BorderColor #B7950B
+}
+
+' ---------------------------------------------------------- Usuarios
+object "maria : Usuario" as maria {
+  numero_documento = "1098765432"
+  nombre = "María López"
+  tipo = "Estudiante"
+  estado = "Activo"
+}
+
+object "carlos : Usuario" as carlos {
+  numero_documento = "1055667788"
+  nombre = "Carlos Gómez"
+  tipo = "Externo"
+  estado = "Activo"
+}
+
+object "laura : Usuario" as laura {
+  numero_documento = "1020304050"
+  nombre = "Laura Martínez"
+  tipo = "Estudiante"
+  estado = "Activo"
+}
+
+object "juan : Usuario" as juan {
+  numero_documento = "1001234567"
+  nombre = "Juan Pérez"
+  tipo = "Docente"
+  estado = "Activo"
+}
+
+' ---------------------------------------------------------- Catalogo
+object "tec : Categoria" as tec {
+  codigo = "TEC"
+  nombre = "Tecnología"
+}
+
+object "lit : Categoria" as lit {
+  codigo = "LIT"
+  nombre = "Literatura"
+}
+
+object "estructuras : Libro" as estructuras {
+  isbn = "9789587654321"
+  titulo = "Estructuras de datos en Python"
+  codigo_categoria = "TEC"
+  total_ejemplares = 2
+  disponibles = 0
+}
+
+object "cien : Libro" as cien {
+  isbn = "9789585001234"
+  titulo = "Cien años de soledad"
+  codigo_categoria = "LIT"
+  total_ejemplares = 5
+  disponibles = 5
+}
+
+' ---------------------------------------------------------- Prestamos
+object "pre0003 : Prestamo" as pre0003 {
+  codigo = "PRE0003"
+  fecha_prestamo = "2026-10-31"
+  fecha_limite = "2026-11-05"
+  fecha_devolucion = "2026-11-10"
+  estado = "Devuelto"
+}
+
+object "pre0005 : Prestamo" as pre0005 {
+  codigo = "PRE0005"
+  fecha_prestamo = "2026-10-21"
+  fecha_limite = "2026-10-28"
+  fecha_devolucion = ""
+  estado = "Activo"
+}
+
+object "pre0006 : Prestamo" as pre0006 {
+  codigo = "PRE0006"
+  fecha_prestamo = "2026-11-10"
+  fecha_limite = "2026-11-17"
+  fecha_devolucion = ""
+  estado = "Activo"
+}
+
+' ---------------------------------------------------------- Multa
+object "mul0001 : Multa" as mul0001 {
+  codigo = "MUL0001"
+  dias_retraso = 5
+  valor = 5000
+  estado = "Pendiente"
+}
+
+' ---------------------------------------------------------- Reservas
+object "res0002 : Reserva" as res0002 {
+  codigo = "RES0002"
+  fecha_reserva = "2026-11-10"
+  estado = "Activa"
+}
+
+object "res0003 : Reserva" as res0003 {
+  codigo = "RES0003"
+  fecha_reserva = "2026-11-10"
+  estado = "Activa"
+}
+
+' ---------------------------------------------------------- Enlaces
+tec -- estructuras
+lit -- cien
+
+carlos -- pre0003
+pre0003 -- cien
+pre0003 -- mul0001
+
+maria -- pre0005
+pre0005 -- estructuras
+
+laura -- pre0006
+pre0006 -- estructuras
+
+carlos -- res0002
+juan -- res0003
+res0002 -- estructuras
+res0003 -- estructuras
+
+note right of pre0005
+  Activo con fecha_limite pasada:
+  la UI lo muestra como "Vencido"
+  (13 dias de retraso, aun sin multa)
+end note
+
+note right of mul0001
+  Carlos devolvio 5 dias tarde:
+  5 x $1.000 = $5.000 COP.
+  Mientras este Pendiente no puede
+  tomar nuevos prestamos.
+end note
+
+note left of estructuras
+  disponibles = 0 -> solo admite
+  reservas (2 activas)
+end note
+
+@enduml

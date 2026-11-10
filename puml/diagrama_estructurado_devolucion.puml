@@ -1,0 +1,69 @@
+@startuml
+title SGB - Diagrama estructurado: PrestamoService.devolver(codigo_prestamo)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam activity {
+  BackgroundColor #FDFEFE
+  BorderColor #2E86C1
+  DiamondBackgroundColor #FEF9E7
+  DiamondBorderColor #B7950B
+}
+
+start
+:prestamo <- repo.obtener_por_codigo(codigo_prestamo);
+if (prestamo existe?) then (no)
+  #F5B7B1:RETORNAR (False, "Préstamo no encontrado");
+  stop
+else (si)
+endif
+if (prestamo.estado == "Devuelto"?) then (si)
+  #F5B7B1:RETORNAR (False, "Ya fue devuelto");
+  stop
+else (no)
+endif
+
+:hoy <- fecha actual;
+:fecha_limite <- prestamo.fecha_limite;
+:prestamo.fecha_devolucion <- hoy;
+:prestamo.estado <- "Devuelto";
+if (repo.actualizar(prestamo) exitoso?) then (no)
+  #F5B7B1:RETORNAR (False, "Error al actualizar el préstamo");
+  stop
+else (si)
+endif
+
+:libro <- libro_repo.obtener_por_isbn(prestamo.isbn);
+if (libro existe?) then (si)
+  :libro.disponibles <- libro.disponibles + 1;
+  :libro_repo.actualizar(libro);
+else (no)
+endif
+
+:dias_retraso <- max(hoy - fecha_limite, 0);
+:valor_multa <- dias_retraso x 1000;
+:mensaje <- "Devolución registrada exitosamente.";
+
+if (dias_retraso > 0?) then (si)
+  :existentes <- multa_repo.obtener_por_prestamo(codigo);
+  if (existentes no esta vacia?) then (si)
+    :multa <- existentes[0];
+    :multa.dias_retraso <- dias_retraso;
+    :multa.valor <- valor_multa;
+    :guardada <- multa_repo.actualizar(multa);
+  else (no)
+    :multa <- Multa(generar_codigo("MUL"), codigo,\ndias_retraso, valor_multa, "Pendiente");
+    :guardada <- multa_repo.guardar(multa);
+  endif
+  if (guardada?) then (si)
+    :mensaje += retraso y multa generada;
+  else (no)
+    :mensaje += "no se pudo registrar la multa";
+  endif
+else (no)
+endif
+
+#D5F5E3:RETORNAR (True, mensaje);
+stop
+
+@enduml

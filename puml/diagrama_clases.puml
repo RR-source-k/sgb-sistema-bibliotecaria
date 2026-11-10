@@ -1,20 +1,102 @@
-@startuml diagrama_clases
-title SGB - Diagrama de Clases (capa de modelo)
+@startuml
+title SGB - Diagrama de Clases: capa de Modelo\n(clases y enumeraciones de model/modelos.py y model/enums.py)
+
 skinparam classAttributeIconSize 0
 skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam linetype ortho
 skinparam class {
-  BackgroundColor #FFFFFF
+  BackgroundColor #FDFEFE
   BorderColor #2E86C1
+  ArrowColor #2E86C1
 }
-hide empty members
+skinparam stereotypeCBackgroundColor #D5F5E3
 
-' ---------------- Enumeraciones ----------------
+' ---------------------------------------------------------- Entidades
+class Usuario {
+  +numero_documento : str
+  +nombre : str
+  +tipo : str
+  +correo : str
+  +telefono : str
+  +estado : str
+  --
+  +to_line() : str
+  {static} +from_line(line : str) : Usuario
+  +to_dict() : dict
+  +__str__() : str
+}
+
+class Categoria {
+  +codigo : str
+  +nombre : str
+  +descripcion : str
+  --
+  +to_line() : str
+  {static} +from_line(line : str) : Categoria
+  +__str__() : str
+}
+
+class Libro {
+  +isbn : str
+  +titulo : str
+  +autor : str
+  +codigo_categoria : str
+  +anio : int
+  +total_ejemplares : int
+  +disponibles : int
+  --
+  +to_line() : str
+  {static} +from_line(line : str) : Libro
+  +__str__() : str
+}
+
+class Prestamo {
+  +codigo : str
+  +isbn : str
+  +numero_documento : str
+  +fecha_prestamo : str
+  +fecha_limite : str
+  +fecha_devolucion : str
+  +estado : str
+  --
+  +to_line() : str
+  {static} +from_line(line : str) : Prestamo
+  +__str__() : str
+}
+
+class Multa {
+  +codigo : str
+  +codigo_prestamo : str
+  +dias_retraso : int
+  +valor : int
+  +estado : str
+  --
+  +to_line() : str
+  {static} +from_line(line : str) : Multa
+  +__str__() : str
+}
+
+class Reserva {
+  +codigo : str
+  +isbn : str
+  +numero_documento : str
+  +fecha_reserva : str
+  +estado : str
+  --
+  +to_line() : str
+  {static} +from_line(line : str) : Reserva
+  +__str__() : str
+}
+
+' ---------------------------------------------------------- Enumeraciones
 enum TipoUsuarioEnum {
   ESTUDIANTE = "Estudiante"
   DOCENTE = "Docente"
   EXTERNO = "Externo"
-  +limite_prestamos : int
-  +dias_prestamo : int
+  --
+  +limite_prestamos : int  {property}
+  +dias_prestamo : int  {property}
 }
 
 enum EstadoPrestamoEnum {
@@ -45,93 +127,21 @@ enum CategoriaEnum {
   OTROS = "OTH"
 }
 
-' ---------------- Clases de dominio ----------------
-class Usuario {
-  +numero_documento : str
-  +nombre : str
-  +tipo : str
-  +correo : str
-  +telefono : str
-  +estado : str
-  +to_line() : str
-  +from_line(line : str) : Usuario {static}
-  +to_dict() : dict
-}
+' ---------------------------------------------------------- Asociaciones
+' (en el codigo se enlazan por clave: documento, isbn, codigo)
+Usuario "1" <-- "0..*" Prestamo : numero_documento
+Usuario "1" <-- "0..*" Reserva : numero_documento
+Libro "1" <-- "0..*" Prestamo : isbn
+Libro "1" <-- "0..*" Reserva : isbn
+Categoria "1" <-- "0..*" Libro : codigo_categoria
+Prestamo "1" <-- "0..1" Multa : codigo_prestamo
 
-class Categoria {
-  +codigo : str
-  +nombre : str
-  +descripcion : str
-  +to_line() : str
-  +from_line(line : str) : Categoria {static}
-}
-
-class Libro {
-  +isbn : str
-  +titulo : str
-  +autor : str
-  +codigo_categoria : str
-  +anio : int
-  +total_ejemplares : int
-  +disponibles : int
-  +to_line() : str
-  +from_line(line : str) : Libro {static}
-}
-
-class Prestamo {
-  +codigo : str
-  +isbn : str
-  +numero_documento : str
-  +fecha_prestamo : str
-  +fecha_limite : str
-  +fecha_devolucion : str
-  +estado : str
-  +to_line() : str
-  +from_line(line : str) : Prestamo {static}
-}
-
-class Multa {
-  +codigo : str
-  +codigo_prestamo : str
-  +dias_retraso : int
-  +valor : int
-  +estado : str
-  +to_line() : str
-  +from_line(line : str) : Multa {static}
-}
-
-class Reserva {
-  +codigo : str
-  +isbn : str
-  +numero_documento : str
-  +fecha_reserva : str
-  +estado : str
-  +to_line() : str
-  +from_line(line : str) : Reserva {static}
-}
-
-' ---------------- Relaciones ----------------
-Categoria "1" o-- "0..*" Libro : agrupa >
-Usuario "1" --> "0..*" Prestamo : solicita >
-Libro "1" --> "0..*" Prestamo : es objeto de >
-Prestamo "1" --> "0..1" Multa : genera >
-Usuario "1" --> "0..*" Reserva : realiza >
-Libro "1" --> "0..*" Reserva : es objeto de >
-
-' Dependencias con enumeraciones (los atributos se guardan como texto)
+' ---------------------------------------------------------- Dependencias con enums
+' (los atributos de estado/tipo guardan el .value de cada enumeracion)
 Usuario ..> TipoUsuarioEnum : tipo
 Prestamo ..> EstadoPrestamoEnum : estado
 Multa ..> EstadoMultaEnum : estado
 Reserva ..> EstadoReservaEnum : estado
-Categoria ..> CategoriaEnum : codigo
+Categoria ..> CategoriaEnum : codigos base
 
-note bottom of Multa
-  valor = dias_retraso x 1.000 COP
-end note
-
-note bottom of TipoUsuarioEnum
-  Estudiante: 3 libros / 7 dias
-  Docente:    5 libros / 15 dias
-  Externo:    2 libros / 5 dias
-end note
 @enduml
