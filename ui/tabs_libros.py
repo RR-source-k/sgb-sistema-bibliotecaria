@@ -7,6 +7,7 @@ from tkinter import messagebox
 from services.libro_service import LibroService
 from model.modelos import Libro
 from ui.tabla import dibujar_tabla
+from ui.dialogo_categoria import DialogoCategoria
 
 
 class TabLibros(ctk.CTkFrame):
@@ -54,10 +55,16 @@ class TabLibros(ctk.CTkFrame):
         ctk.CTkLabel(form_frame, text="Categoría:").grid(
             row=2, column=2, padx=(15, 0), pady=5, sticky="w"
         )
-        self.combo_categoria = ctk.CTkComboBox(
-            form_frame, values=[], width=120
+        cat_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+        cat_frame.grid(row=2, column=3, padx=5, pady=5, sticky="w")
+        self.combo_categoria = ctk.CTkComboBox(cat_frame, values=[], width=150)
+        self.combo_categoria.grid(row=0, column=0, sticky="w")
+        self.btn_nueva_categoria = ctk.CTkButton(
+            cat_frame, text="+ Nueva", width=80,
+            fg_color="#8e44ad", hover_color="#6c3483",
+            command=self._nueva_categoria,
         )
-        self.combo_categoria.grid(row=2, column=3, padx=5, pady=5, sticky="w")
+        self.btn_nueva_categoria.grid(row=0, column=1, padx=(8, 0))
 
         # Año
         ctk.CTkLabel(form_frame, text="Año:").grid(
@@ -180,8 +187,18 @@ class TabLibros(ctk.CTkFrame):
         categorias = self.libro_service.obtener_categorias_disponibles()
         nombres = [name for _, name in categorias] if categorias else []
         self.combo_categoria.configure(values=nombres)
-        if nombres and self.combo_categoria.get() not in nombres:
-            self.combo_categoria.set(nombres[0])  # el valor por defecto de ctk no es una categoría
+        if self.combo_categoria.get() not in nombres:
+            # el valor por defecto de ctk ("CTkComboBox") no es una categoría
+            self.combo_categoria.set(nombres[0] if nombres else "")
+
+    def _nueva_categoria(self):
+        """Abre el diálogo para registrar una categoría y la deja seleccionada."""
+        def al_guardar(nombre):
+            self._load_categories()
+            self.combo_categoria.set(nombre)
+            self.refresh_table()
+
+        DialogoCategoria(self, self.libro_service.registrar_categoria, al_guardar)
 
     def _limpiar_form(self):
         """Clear all form fields."""

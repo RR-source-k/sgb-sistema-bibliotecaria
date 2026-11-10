@@ -49,6 +49,15 @@ class TabPrestamos(ctk.CTkFrame):
         self.documento_entry = ctk.CTkEntry(form_frame, width=200)
         self.documento_entry.grid(row=1, column=3, padx=15, pady=5, sticky="ew")
 
+        # Fecha de préstamo (opcional)
+        ctk.CTkLabel(form_frame, text="Fecha préstamo:").grid(
+            row=2, column=0, padx=15, pady=5, sticky="w"
+        )
+        self.fecha_entry = ctk.CTkEntry(
+            form_frame, width=250, placeholder_text="AAAA-MM-DD (vacío = hoy)"
+        )
+        self.fecha_entry.grid(row=2, column=1, padx=15, pady=5, sticky="ew")
+
         # Botón crear préstamo
         btn_create = ctk.CTkButton(
             form_frame,
@@ -57,16 +66,16 @@ class TabPrestamos(ctk.CTkFrame):
             hover_color="#1B4F72",
             command=self._crear_prestamo,
         )
-        btn_create.grid(row=2, column=0, columnspan=4, padx=15, pady=10)
+        btn_create.grid(row=3, column=0, columnspan=4, padx=15, pady=10)
 
         # Separador
         separator1 = ctk.CTkFrame(form_frame, fg_color="#E0E0E0", height=2)
-        separator1.grid(row=3, column=0, columnspan=4, padx=10, pady=5, sticky="ew")
+        separator1.grid(row=4, column=0, columnspan=4, padx=10, pady=5, sticky="ew")
 
         # --- Return Section ---
         return_frame = ctk.CTkFrame(form_frame, fg_color="#f9f9f9", corner_radius=8)
         return_frame.grid(
-            row=4, column=0, columnspan=4, padx=15, pady=5, sticky="ew"
+            row=5, column=0, columnspan=4, padx=15, pady=5, sticky="ew"
         )
 
         ctk.CTkLabel(
@@ -172,12 +181,14 @@ class TabPrestamos(ctk.CTkFrame):
             messagebox.showerror("Error", "Debe ingresar ISBN y documento.")
             return
 
-        success, message = self.prestamo_service.crear_prestamo(isbn, documento)
+        fecha = self.fecha_entry.get().strip()
+        success, message = self.prestamo_service.crear_prestamo(isbn, documento, fecha or None)
 
         if success:
             messagebox.showinfo("Éxito", message)
             self.isbn_entry.delete(0, "end")
             self.documento_entry.delete(0, "end")
+            self.fecha_entry.delete(0, "end")
             self._load_table("activos")
         else:
             messagebox.showerror("Error", message)

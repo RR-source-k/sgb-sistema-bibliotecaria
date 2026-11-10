@@ -12,6 +12,8 @@ from ui.tabs_prestamos import TabPrestamos
 from ui.tabs_multas import TabMultas
 from ui.tabs_reservas import TabReservas
 from ui.tabs_analisis import TabAnalisis
+from services.datos_ejemplo import CargadorEjemplo
+from ui.demo import DemoEjemplo
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,7 +53,27 @@ class SGBMainWindow(ctk.CTk):
             font=ctk.CTkFont(size=11, family="Helvetica"),
             text_color="#aaaaaa",
         )
-        user_label.grid(row=0, column=1, padx=20, pady=10, sticky="e")
+        user_label.grid(row=0, column=3, padx=20, pady=10, sticky="e")
+
+        self.btn_cargar = ctk.CTkButton(
+            top_frame, text="Cargar casos de ejemplo", width=190,
+            fg_color="#27AE60", hover_color="#1E8449",
+            command=self._cargar_ejemplos,
+        )
+        self.btn_cargar.grid(row=0, column=1, padx=5, pady=10)
+
+        self.btn_reiniciar = ctk.CTkButton(
+            top_frame, text="Vaciar datos", width=120,
+            fg_color="#C0392B", hover_color="#922B21",
+            command=self._vaciar_datos,
+        )
+        self.btn_reiniciar.grid(row=0, column=2, padx=5, pady=10)
+
+        self.estado_label = ctk.CTkLabel(
+            top_frame, text="", text_color="#7fd1a0",
+            font=ctk.CTkFont(size=12, family="Helvetica"),
+        )
+        self.estado_label.grid(row=1, column=0, columnspan=4, padx=20, pady=(0, 8), sticky="w")
 
         # Tabview
         self.tabview = ctk.CTkTabview(
@@ -109,3 +131,34 @@ class SGBMainWindow(ctk.CTk):
             self.tab_analisis_instance.refresh_table()
         except Exception as e:
             logger.error(f"Error reloading tabs: {e}")
+
+    # ------------------------------------------------------- datos de ejemplo
+    def _set_botones(self, estado: str):
+        self.btn_cargar.configure(state=estado)
+        self.btn_reiniciar.configure(state=estado)
+
+    def _vaciar_datos(self):
+        """Borra usuarios, libros, préstamos, multas y reservas."""
+        if not messagebox.askyesno(
+            "Vaciar datos",
+            "Se borrarán usuarios, libros, préstamos, multas y reservas.\n¿Continuar?",
+        ):
+            return
+        CargadorEjemplo().limpiar()
+        self.tab_libro_instance._load_categories()
+        self._reload_all_tabs()
+        self.estado_label.configure(text="Datos vaciados.", text_color="#7fd1a0")
+
+    def _cargar_ejemplos(self):
+        """Llena el sistema paso a paso escribiendo en los formularios (ui/demo.py)."""
+        cargador = CargadorEjemplo()
+        if cargador.hay_datos():
+            if not messagebox.askyesno(
+                "Cargar casos de ejemplo",
+                "Ya hay datos registrados.\n"
+                "¿Borrarlos y cargar los casos de ejemplo desde cero?",
+            ):
+                return
+            cargador.limpiar()
+            self._reload_all_tabs()
+        DemoEjemplo(self).iniciar()

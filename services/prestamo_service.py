@@ -47,14 +47,27 @@ class PrestamoService:
     def obtener_por_usuario(self, documento: str) -> list[Prestamo]:
         return self.repo.obtener_por_usuario(documento)
 
-    def crear_prestamo(self, isbn: str, numero_documento: str) -> tuple[bool, str]:
+    def crear_prestamo(self, isbn: str, numero_documento: str,
+                       fecha_prestamo: str | None = None) -> tuple[bool, str]:
         """
         Create a new loan. Returns (success, message).
         Validates:
           - User exists and is active
           - Book exists and has available copies
           - User hasn't reached their loan limit
+        `fecha_prestamo` (AAAA-MM-DD) es opcional; por defecto es hoy. Permite registrar
+        préstamos con fecha anterior; la fecha límite se calcula a partir de ella.
         """
+        # 0. Fecha del préstamo (opcional)
+        fecha_inicio = datetime.now()
+        if fecha_prestamo and fecha_prestamo.strip():
+            try:
+                fecha_inicio = datetime.strptime(fecha_prestamo.strip(), "%Y-%m-%d")
+            except ValueError:
+                return False, "Fecha de préstamo inválida. Use el formato AAAA-MM-DD."
+            if fecha_inicio.date() > datetime.now().date():
+                return False, "La fecha de préstamo no puede ser futura."
+
         # 1. Validate user
         usuario = self.usuario_repo.obtener_por_documento(numero_documento)
         if usuario is None:
@@ -100,7 +113,7 @@ class PrestamoService:
 
         # 4. Create loan
         periodo = LOAN_PERIODS.get(tipo_usuario, 7)
-        fecha_prestamo = datetime.now()
+        fecha_prestamo = fecha_inicio
         fecha_limite = fecha_prestamo + timedelta(days=periodo)
         codigo = self.repo._generar_codigo("PRE")
 

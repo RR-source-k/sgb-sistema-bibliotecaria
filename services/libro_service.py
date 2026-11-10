@@ -1,7 +1,7 @@
 """Book service - Business logic for book management."""
 
 import logging
-from model.modelos import Libro
+from model.modelos import Libro, Categoria
 from repositories.libro_repo import LibroRepository
 from repositories.categoria_repo import CategoriaRepository
 
@@ -31,6 +31,31 @@ class LibroService:
         """Return list of (codigo, nombre) tuples for all categories."""
         categorias = self.cat_repo.obtener_todos()
         return [(cat.codigo, cat.nombre) for cat in categorias]
+
+    def registrar_categoria(self, codigo: str, nombre: str,
+                            descripcion: str = "") -> tuple[bool, str]:
+        """Registra una categoría nueva. Retorna (éxito, mensaje)."""
+        codigo = codigo.strip().upper()
+        nombre = nombre.strip()
+        descripcion = descripcion.strip()
+
+        if not codigo or not nombre:
+            return False, "Código y nombre son requeridos."
+        if not (2 <= len(codigo) <= 5) or not codigo.isalnum():
+            return False, "El código debe tener de 2 a 5 letras o números (ej. ART)."
+        if any("|" in campo for campo in (codigo, nombre, descripcion)):
+            return False, "El carácter '|' no está permitido."
+
+        existentes = self.cat_repo.obtener_todos()
+        if any(c.codigo == codigo for c in existentes):
+            return False, f"Ya existe una categoría con el código {codigo}."
+        if any(c.nombre.lower() == nombre.lower() for c in existentes):
+            return False, f"Ya existe una categoría llamada '{nombre}'."
+
+        if self.cat_repo.guardar(Categoria(codigo, nombre, descripcion)):
+            logger.info(f"Category registered: {codigo} - {nombre}")
+            return True, f"Categoría '{nombre}' registrada exitosamente."
+        return False, "Error al registrar la categoría."
 
     def registrar(self, libro: Libro) -> tuple[bool, str]:
         """Register a new book. Returns (success, message)."""
